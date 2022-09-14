@@ -13,7 +13,7 @@ builder.Services.AddScoped<IJWTManagerRepository, JWTManagerRepository>();
 builder.Services.AddDbContext<RockMartContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Server") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
-builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAuthorization();
@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(options =>
     o.TokenValidationParameters = new TokenValidationParameters
     {
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = "user",
+        ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey
         (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
         ValidateIssuer = false,
@@ -63,6 +63,7 @@ builder.Services.AddSwaggerGen(c => {
         }
     });
 });
+builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
