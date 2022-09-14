@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<RockMartContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Server") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Server") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Server2") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 
 // Add services to the container.
 

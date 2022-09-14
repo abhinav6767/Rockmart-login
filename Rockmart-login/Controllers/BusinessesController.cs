@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rockmart_login.Entities;
@@ -24,24 +19,23 @@ namespace Rockmart_login.Controllers
         public BusinessesController(RockMartContext context, IJWTManagerRepository jWTManager, IUserServiceRepository userServiceRepository)
         {
             _context = context;
-            _jWTManager= jWTManager;
+            _jWTManager = jWTManager;
             this.userServiceRepository = userServiceRepository;
         }
 
         // GET: api/Businesses
-        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Business>>> GetBusinesses()
         {
-          if (_context.Businesses == null)
-          {
-              return NotFound();
-          }
+            if (_context.Businesses == null)
+            {
+                return NotFound();
+            }
             return await _context.Businesses.ToListAsync();
         }
 
         // GET: api/Businesses/5
-   
+
         [AllowAnonymous]
         [HttpPost]
         [Route("authenticate")]
