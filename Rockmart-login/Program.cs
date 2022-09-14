@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -7,11 +8,12 @@ using Rockmart_login.Repo;
 using System.Configuration;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddScoped<IJWTManagerRepository, JWTManagerRepository>();
 builder.Services.AddDbContext<RockMartContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Server") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Server2") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
+
+// Add services to the container.
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -24,6 +26,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(o =>
 {
+    o.SaveToken = true;
     o.TokenValidationParameters = new TokenValidationParameters
     {
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -33,7 +36,20 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
-        ValidateIssuerSigningKey = true
+        ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero
+    };
+    o.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("IS-TOKEN-EXPIRED", "true");
+            }
+            return Task.CompletedTask;
+        }
+
     };
 });
 builder.Services.AddSwaggerGen(c => {
@@ -63,6 +79,18 @@ builder.Services.AddSwaggerGen(c => {
         }
     });
 });
+//builder.Services.AddIdentity<Rockmart_login.Security_Model.Users, IdentityRole>(options =>
+//{
+//    options.User.RequireUniqueEmail = false;
+//})
+//    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
+    options.Password.RequireUppercase = false; // on production add more secured options
+    options.Password.RequireDigit = true;
+    options.SignIn.RequireConfirmedEmail = false;
+}).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+builder.Services.AddSingleton<IJWTManagerRepository, JWTManagerRepository>();
+builder.Services.AddScoped<IUserServiceRepository, UserServiceRepository>();
 builder.Services.AddControllers();
 var app = builder.Build();
 
