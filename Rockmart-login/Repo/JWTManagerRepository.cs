@@ -104,7 +104,7 @@ namespace Rockmart_login.Repo
 				return null;
 			}
             _context.Dispose();
-
+             
             // Else we generate JSON Web Token
             var tokenHandler = new JwtSecurityTokenHandler();
 			var tokenKey = Encoding.UTF8.GetBytes(iconfiguration["JWT:Key"]);

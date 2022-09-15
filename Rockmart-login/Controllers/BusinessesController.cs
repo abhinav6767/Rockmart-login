@@ -24,6 +24,7 @@ namespace Rockmart_login.Controllers
         }
 
         // GET: api/Businesses
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Business>>> GetBusinesses()
         {
