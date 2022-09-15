@@ -13,11 +13,6 @@ builder.Services.AddDbContext<RockMartContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Server") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Server2") ?? throw new InvalidOperationException("Connection string 'DataContext' not found.")));
-
-// Add services to the container.
-
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(options =>
@@ -81,11 +76,6 @@ builder.Services.AddSwaggerGen(c => {
         }
     });
 });
-//builder.Services.AddIdentity<Rockmart_login.Security_Model.Users, IdentityRole>(options =>
-//{
-//    options.User.RequireUniqueEmail = false;
-//})
-//    .AddDefaultTokenProviders();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.Password.RequireUppercase = false; // on production add more secured options
     options.Password.RequireDigit = true;
@@ -94,6 +84,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 builder.Services.AddScoped<IJWTManagerRepository, JWTManagerRepository>();
 builder.Services.AddScoped<IUserServiceRepository, UserServiceRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddControllers();
 var app = builder.Build();
 
