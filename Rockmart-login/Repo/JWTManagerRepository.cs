@@ -1,10 +1,11 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Rockmart_login.Security_Model;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
+using Rockmart_login.Entities;
 namespace Rockmart_login.Repo
 
 {
@@ -16,11 +17,13 @@ namespace Rockmart_login.Repo
 		{ "user2","password2"},
 		{ "user3","password3"},
 	};
+        private readonly RockMartContext _context;
 
-		private readonly IConfiguration iconfiguration;
-		public JWTManagerRepository(IConfiguration iconfiguration)
+        private readonly IConfiguration iconfiguration;
+		public JWTManagerRepository(RockMartContext context ,IConfiguration iconfiguration)
 		{
-			this.iconfiguration = iconfiguration;
+            _context = context;
+            this.iconfiguration = iconfiguration;
 		}
 
         public Tokens GenerateToken(string userName)
@@ -95,13 +98,15 @@ namespace Rockmart_login.Repo
         }
         public Tokens Authenticate(Users users)
 		{
-			if (!UsersRecords.Any(x => x.Key == users.BusinessName && x.Value == users.Password))
+            Business UsersRecord = _context.Businesses.FirstOrDefault((x => x.BusinessUsername == users.BusinessName & x.Password == users.Password)); 
+            if (UsersRecord == null)
 			{
 				return null;
 			}
-
-			// Else we generate JSON Web Token
-			var tokenHandler = new JwtSecurityTokenHandler();
+            _context.Dispose();
+             
+            // Else we generate JSON Web Token
+            var tokenHandler = new JwtSecurityTokenHandler();
 			var tokenKey = Encoding.UTF8.GetBytes(iconfiguration["JWT:Key"]);
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
