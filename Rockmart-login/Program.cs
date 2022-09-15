@@ -89,7 +89,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.Password.RequireDigit = true;
     options.SignIn.RequireConfirmedEmail = false;
 }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
-builder.Services.AddSingleton<IJWTManagerRepository, JWTManagerRepository>();
+builder.Services.AddScoped<IJWTManagerRepository, JWTManagerRepository>();
 builder.Services.AddScoped<IUserServiceRepository, UserServiceRepository>();
 builder.Services.AddControllers();
 var app = builder.Build();
