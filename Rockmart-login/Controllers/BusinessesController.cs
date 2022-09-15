@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rockmart_login.Entities;
 using Rockmart_login.Repo;
+using Rockmart_login.Service;
 using Rockmart_login.Security_Model;
 
 namespace Rockmart_login.Controllers
@@ -15,12 +16,16 @@ namespace Rockmart_login.Controllers
         private readonly RockMartContext _context;
         private readonly IJWTManagerRepository _jWTManager;
         private readonly IUserServiceRepository userServiceRepository;
+        private readonly IUserService userService;
+        private readonly IJWTService jWTService;
 
-        public BusinessesController(RockMartContext context, IJWTManagerRepository jWTManager, IUserServiceRepository userServiceRepository)
+        public BusinessesController(RockMartContext context, IJWTManagerRepository jWTManager, IUserServiceRepository userServiceRepository, IUserService userService, IJWTService jWTService)
         {
             _context = context;
             _jWTManager = jWTManager;
             this.userServiceRepository = userServiceRepository;
+            this.userService = userService;
+            this.jWTService = jWTService;
         }
 
         // GET: api/Businesses
@@ -42,14 +47,14 @@ namespace Rockmart_login.Controllers
         [Route("authenticate")]
         public async Task<IActionResult> AuthenticateAsync(Users usersdata)
         {
-            var validUser = await userServiceRepository.IsValidUserAsync(usersdata);
+            var validUser = await userService.IsValidUserAsync(usersdata);
 
             if (!validUser)
             {
                 return Unauthorized("Incorrect username or password!");
             }
 
-            var token = _jWTManager.GenerateToken(usersdata.BusinessName);
+            var token = jWTService.GenerateToken(usersdata.BusinessName);
 
             if (token == null)
             {
@@ -63,8 +68,8 @@ namespace Rockmart_login.Controllers
                 UserName = usersdata.BusinessName
             };
 
-            userServiceRepository.AddUserRefreshTokens(obj);
-            userServiceRepository.SaveCommit();
+            userService.AddUserRefreshTokens(obj);
+            userService.SaveCommit();
             return Ok(token);
         }
 
@@ -73,18 +78,18 @@ namespace Rockmart_login.Controllers
         [Route("refresh")]
         public IActionResult Refresh(Tokens token)
         {
-            var principal = _jWTManager.GetPrincipalFromExpiredToken(token.Token);
+            var principal = jWTService.GetPrincipalFromExpiredToken(token.Token);
             var username = principal.Identity?.Name;
 
             //retrieve the saved refresh token from database
-            var savedRefreshToken = userServiceRepository.GetSavedRefreshTokens(username, token.RefreshToken);
+            var savedRefreshToken = userService.GetSavedRefreshTokens(username, token.RefreshToken);
 
             if (savedRefreshToken.RefreshToken != token.RefreshToken)
             {
                 return Unauthorized("Invalid attempt!");
             }
 
-            var newJwtToken = _jWTManager.GenerateRefreshToken(username);
+            var newJwtToken = jWTService.GenerateRefreshToken(username);
 
             if (newJwtToken == null)
             {
@@ -98,9 +103,9 @@ namespace Rockmart_login.Controllers
                 UserName = username
             };
 
-            userServiceRepository.DeleteUserRefreshTokens(username, token.RefreshToken);
-            userServiceRepository.AddUserRefreshTokens(obj);
-            userServiceRepository.SaveCommit();
+            userService.DeleteUserRefreshTokens(username, token.RefreshToken);
+            userService.AddUserRefreshTokens(obj);
+            userService.SaveCommit();
 
             return Ok(newJwtToken);
         }
